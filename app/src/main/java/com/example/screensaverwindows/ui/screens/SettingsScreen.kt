@@ -2,6 +2,7 @@ package com.example.screensaverwindows.ui.screens
 
 import android.opengl.GLSurfaceView
 import androidx.compose.foundation.background
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -30,6 +31,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
@@ -328,15 +331,86 @@ private fun BoxScope.PreviewSettingsOverlay(settings: ScreensaverSettings) {
                 .padding(top = 14.dp, end = 16.dp),
             horizontalAlignment = Alignment.End,
         ) {
-            Text(
-                text = "22\u00B0  Clear",
-                color = Color.White,
-                fontSize = 15.sp,
-                fontWeight = FontWeight.SemiBold,
+            Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                PreviewWeatherIcon()
+                Text(
+                    text = "22\u00B0  Clear",
+                    color = Color.White,
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.SemiBold,
+                )
+            }
+            PreviewForecastRow("Sat  24\u00B0/17\u00B0", icon = PreviewWeatherIconType.Partly)
+            PreviewForecastRow("Sun  25\u00B0/18\u00B0", icon = PreviewWeatherIconType.Clear)
+            PreviewForecastRow("Mon  23\u00B0/16\u00B0", icon = PreviewWeatherIconType.Rain)
+        }
+    }
+}
+
+@Composable
+private fun PreviewForecastRow(text: String, icon: PreviewWeatherIconType) {
+    Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+        PreviewWeatherIcon(sizeDp = 11, type = icon)
+        Text(text, color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
+    }
+}
+
+private enum class PreviewWeatherIconType {
+    Clear,
+    Partly,
+    Rain,
+}
+
+@Composable
+private fun PreviewWeatherIcon(sizeDp: Int = 22, type: PreviewWeatherIconType = PreviewWeatherIconType.Partly) {
+    Canvas(modifier = Modifier.size(sizeDp.dp)) {
+        val r = size.minDimension * 0.20f
+        val cx = size.width * 0.34f
+        val cy = size.height * 0.36f
+        if (type == PreviewWeatherIconType.Clear || type == PreviewWeatherIconType.Partly) {
+            for (i in 0 until 8) {
+                val angle = i * kotlin.math.PI.toFloat() / 4f
+                drawLine(
+                    color = Color(0xFFFFCA37),
+                    start = androidx.compose.ui.geometry.Offset(
+                        cx + kotlin.math.cos(angle) * r * 1.45f,
+                        cy + kotlin.math.sin(angle) * r * 1.45f,
+                    ),
+                    end = androidx.compose.ui.geometry.Offset(
+                        cx + kotlin.math.cos(angle) * r * 1.95f,
+                        cy + kotlin.math.sin(angle) * r * 1.95f,
+                    ),
+                    strokeWidth = r * 0.25f,
+                )
+            }
+            drawCircle(Color(0xFFFFCA37), radius = r, center = androidx.compose.ui.geometry.Offset(cx, cy))
+        }
+        if (type != PreviewWeatherIconType.Clear) {
+            val cloud = Path().apply {
+                addOval(androidx.compose.ui.geometry.Rect(size.width * 0.26f, size.height * 0.42f, size.width * 0.58f, size.height * 0.74f))
+                addOval(androidx.compose.ui.geometry.Rect(size.width * 0.43f, size.height * 0.32f, size.width * 0.78f, size.height * 0.72f))
+                addRoundRect(
+                    androidx.compose.ui.geometry.RoundRect(
+                        androidx.compose.ui.geometry.Rect(size.width * 0.22f, size.height * 0.54f, size.width * 0.92f, size.height * 0.82f),
+                        cornerRadius = androidx.compose.ui.geometry.CornerRadius(size.width * 0.08f),
+                    ),
+                )
+            }
+            drawPath(cloud, Color.White.copy(alpha = 0.96f))
+        }
+        if (type == PreviewWeatherIconType.Rain) {
+            drawLine(
+                color = Color(0xFF69D2FF),
+                start = androidx.compose.ui.geometry.Offset(size.width * 0.42f, size.height * 0.78f),
+                end = androidx.compose.ui.geometry.Offset(size.width * 0.34f, size.height * 0.96f),
+                strokeWidth = size.minDimension * 0.06f,
             )
-            Text("Sat  24\u00B0/17\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
-            Text("Sun  25\u00B0/18\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
-            Text("Mon  23\u00B0/16\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
+            drawLine(
+                color = Color(0xFF69D2FF),
+                start = androidx.compose.ui.geometry.Offset(size.width * 0.66f, size.height * 0.78f),
+                end = androidx.compose.ui.geometry.Offset(size.width * 0.58f, size.height * 0.96f),
+                strokeWidth = size.minDimension * 0.06f,
+            )
         }
     }
 }
