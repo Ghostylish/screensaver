@@ -9,25 +9,16 @@ enum class ScreensaverEffect(val title: String, val windowsFamily: String) {
     FlyingWindows("Flying Windows", "Windows XP classics"),
     Marquee("Marquee", "Windows XP classics"),
     Bubbles("Bubbles", "Windows Vista"),
+    ThreeDText("3D Text", "Windows Vista"),
+    WindowsEnergy("Windows Energy", "Windows Vista"),
     Ribbons("Ribbons", "Windows 7"),
-    ModernFlow("Modern Flow", "Windows 10 / 11 inspired"),
-}
-
-enum class ColorScheme(val title: String) {
-    Neon("Neon"),
-    Chrome("Chrome"),
-    Glass("Glass"),
-    Random("Random"),
+    Photos("Photos", "Windows 10 / 11 inspired"),
 }
 
 data class ScreensaverSettings(
     val effect: ScreensaverEffect = ScreensaverEffect.Pipes,
-    val speed: Float = 0.65f,
-    val brightness: Float = 0.85f,
-    val targetFps: Int = 60,
-    val renderScale: Float = 1f,
-    val colorScheme: ColorScheme = ColorScheme.Neon,
+    val speed: Float = 1f,
+    val brightness: Float = 1f,
     val showClock: Boolean = true,
     val showWeather: Boolean = false,
-    val showPhotos: Boolean = false,
 )

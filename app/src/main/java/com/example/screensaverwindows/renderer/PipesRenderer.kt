@@ -3,6 +3,7 @@ package com.example.screensaverwindows.renderer
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
 import android.opengl.Matrix
+import com.example.screensaverwindows.settings.RuntimeSettings
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -78,7 +79,7 @@ class PipesRenderer : GLSurfaceView.Renderer {
         GLES30.glUseProgram(program)
         GLES30.glUniform3f(lightHandle, -0.32f, 0.78f, 0.82f)
 
-        val elapsed = (now - startMs) / 1000f
+        val elapsed = (now - startMs) / 1000f * RuntimeSettings.speed
         Matrix.setLookAtM(
             view,
             0,

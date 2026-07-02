@@ -8,6 +8,7 @@ import android.graphics.Paint
 import android.graphics.Typeface
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
+import com.example.screensaverwindows.settings.RuntimeSettings
 import android.opengl.GLUtils
 import com.example.screensaverwindows.settings.SettingsStorage
 import java.nio.ByteBuffer
@@ -62,11 +63,11 @@ class MarqueeRenderer(
 
     override fun onDrawFrame(gl: GL10?) {
         val now = System.nanoTime()
-        val deltaSeconds = if (lastFrameNanos == 0L) {
+        val deltaSeconds = (if (lastFrameNanos == 0L) {
             1f / 60f
         } else {
             ((now - lastFrameNanos) / 1_000_000_000f).coerceAtMost(0.04f)
-        }
+        }) * RuntimeSettings.speed
         lastFrameNanos = now
 
         scrollX -= SCROLL_SPEED * deltaSeconds

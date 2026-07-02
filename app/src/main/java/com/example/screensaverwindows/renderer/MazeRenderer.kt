@@ -2,6 +2,7 @@ package com.example.screensaverwindows.renderer
 
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
+import com.example.screensaverwindows.settings.RuntimeSettings
 import android.opengl.Matrix
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
@@ -67,11 +68,11 @@ class MazeRenderer : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         val now = System.nanoTime()
-        val deltaSeconds = if (lastFrameNanos == 0L) {
+        val deltaSeconds = (if (lastFrameNanos == 0L) {
             1f / 60f
         } else {
             ((now - lastFrameNanos) / 1_000_000_000f).coerceAtMost(0.04f)
-        }
+        }) * RuntimeSettings.speed
         lastFrameNanos = now
         updateCamera(deltaSeconds)
 

@@ -4,6 +4,7 @@ import android.opengl.GLSurfaceView
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +33,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.TextFieldValue
+import androidx.compose.ui.unit.sp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.tv.material3.Card
@@ -46,12 +48,19 @@ import com.example.screensaverwindows.renderer.FlyingWindowsRenderer
 import com.example.screensaverwindows.renderer.MarqueeRenderer
 import com.example.screensaverwindows.renderer.MazeRenderer
 import com.example.screensaverwindows.renderer.MystifyRenderer
+import com.example.screensaverwindows.renderer.PhotosRenderer
 import com.example.screensaverwindows.renderer.PipesRenderer
 import com.example.screensaverwindows.renderer.RibbonsRenderer
 import com.example.screensaverwindows.renderer.StarfieldRenderer
+import com.example.screensaverwindows.renderer.ThreeDTextRenderer
+import com.example.screensaverwindows.renderer.WindowsEnergyRenderer
+import com.example.screensaverwindows.settings.RuntimeSettings
 import com.example.screensaverwindows.settings.ScreensaverEffect
 import com.example.screensaverwindows.settings.ScreensaverSettings
 import com.example.screensaverwindows.settings.SettingsStorage
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @OptIn(ExperimentalTvMaterial3Api::class)
 @Composable
@@ -59,12 +68,18 @@ fun SettingsScreen() {
     val context = LocalContext.current
     val storage = remember(context) { SettingsStorage(context) }
     var settings by remember {
-        mutableStateOf(ScreensaverSettings(effect = storage.getEffect()))
+        mutableStateOf(storage.getSettings())
     }
     var marqueeText by remember {
         mutableStateOf(TextFieldValue(storage.getMarqueeText()))
     }
+    var threeDText by remember {
+        mutableStateOf(TextFieldValue(storage.getThreeDText()))
+    }
     var showMarqueeDialog by remember {
+        mutableStateOf(false)
+    }
+    var showThreeDTextDialog by remember {
         mutableStateOf(false)
     }
 
@@ -91,7 +106,7 @@ fun SettingsScreen() {
                     color = Color(0xFFB7C0D8),
                     style = MaterialTheme.typography.bodyLarge,
                 )
-                LiveEffectPreview(settings.effect, marqueeText.text)
+                LiveEffectPreview(settings, marqueeText.text, threeDText.text)
                 SettingsSummary(settings)
             }
 
@@ -115,7 +130,10 @@ fun SettingsScreen() {
                             effect == ScreensaverEffect.FlyingWindows ||
                             effect == ScreensaverEffect.Marquee ||
                             effect == ScreensaverEffect.Bubbles ||
-                            effect == ScreensaverEffect.Ribbons
+                            effect == ScreensaverEffect.ThreeDText ||
+                            effect == ScreensaverEffect.WindowsEnergy ||
+                            effect == ScreensaverEffect.Ribbons ||
+                            effect == ScreensaverEffect.Photos
                         OptionCard(
                             title = effect.title,
                             subtitle = when {
@@ -132,6 +150,10 @@ fun SettingsScreen() {
                                     marqueeText = TextFieldValue(storage.getMarqueeText())
                                     showMarqueeDialog = true
                                 }
+                                if (effect == ScreensaverEffect.ThreeDText) {
+                                    threeDText = TextFieldValue(storage.getThreeDText())
+                                    showThreeDTextDialog = true
+                                }
                             },
                         )
                     }
@@ -140,20 +162,64 @@ fun SettingsScreen() {
                     Spacer(modifier = Modifier.height(10.dp))
                     SectionTitle("Settings")
                 }
-                item { OptionCard("Speed", "${(settings.speed * 100).toInt()}%", false) }
-                item { OptionCard("Color scheme", settings.colorScheme.title, false) }
-                item { OptionCard("Brightness", "${(settings.brightness * 100).toInt()}%", false) }
-                item { OptionCard("FPS", "${settings.targetFps}", false) }
-                item { OptionCard("Render scale", "${(settings.renderScale * 100).toInt()}%", false) }
-                item { OptionCard("Clock", if (settings.showClock) "On" else "Off", false) }
-                item { OptionCard("Weather", if (settings.showWeather) "On" else "Off", false) }
-                item { OptionCard("Photos", if (settings.showPhotos) "On" else "Off", false) }
+                item {
+                    OptionCard(
+                        title = "Speed",
+                        subtitle = "${settings.speed}x",
+                        selected = false,
+                        onClick = {
+                            val next = nextSpeed(settings.speed)
+                            storage.setSpeed(next)
+                            RuntimeSettings.speed = next
+                            settings = settings.copy(speed = next)
+                        },
+                    )
+                }
+                item {
+                    OptionCard(
+                        title = "Brightness",
+                        subtitle = "${(settings.brightness * 100).toInt()}%",
+                        selected = false,
+                        onClick = {
+                            val next = nextBrightness(settings.brightness)
+                            storage.setBrightness(next)
+                            settings = settings.copy(brightness = next)
+                        },
+                    )
+                }
+                item {
+                    OptionCard(
+                        title = "Clock",
+                        subtitle = if (settings.showClock) "On" else "Off",
+                        selected = settings.showClock,
+                        onClick = {
+                            val next = !settings.showClock
+                            storage.setShowClock(next)
+                            settings = settings.copy(showClock = next)
+                        },
+                    )
+                }
+                item {
+                    OptionCard(
+                        title = "Weather",
+                        subtitle = if (settings.showWeather) "On" else "Off",
+                        selected = settings.showWeather,
+                        onClick = {
+                            val next = !settings.showWeather
+                            storage.setShowWeather(next)
+                            settings = settings.copy(showWeather = next)
+                        },
+                    )
+                }
             }
         }
     }
 
     if (showMarqueeDialog) {
-        MarqueeTextDialog(
+        TextInputDialog(
+            title = "Marquee text",
+            defaultText = SettingsStorage.DEFAULT_MARQUEE_TEXT,
+            maxLength = SettingsStorage.MAX_MARQUEE_TEXT_LENGTH,
             value = marqueeText,
             onValueChange = { value ->
                 marqueeText = if (value.text.length > SettingsStorage.MAX_MARQUEE_TEXT_LENGTH) {
@@ -170,10 +236,32 @@ fun SettingsScreen() {
             },
         )
     }
+
+    if (showThreeDTextDialog) {
+        TextInputDialog(
+            title = "3D Text",
+            defaultText = SettingsStorage.DEFAULT_THREE_D_TEXT,
+            maxLength = SettingsStorage.MAX_THREE_D_TEXT_LENGTH,
+            value = threeDText,
+            onValueChange = { value ->
+                threeDText = if (value.text.length > SettingsStorage.MAX_THREE_D_TEXT_LENGTH) {
+                    value.copy(text = value.text.take(SettingsStorage.MAX_THREE_D_TEXT_LENGTH))
+                } else {
+                    value
+                }
+            },
+            onDismiss = {
+                val finalText = threeDText.text.ifBlank { SettingsStorage.DEFAULT_THREE_D_TEXT }
+                threeDText = TextFieldValue(finalText)
+                storage.setThreeDText(finalText)
+                showThreeDTextDialog = false
+            },
+        )
+    }
 }
 
 @Composable
-private fun LiveEffectPreview(effect: ScreensaverEffect, marqueeText: String) {
+private fun LiveEffectPreview(settings: ScreensaverSettings, marqueeText: String, threeDText: String) {
     Box(
         modifier = Modifier
             .fillMaxWidth()
@@ -186,17 +274,69 @@ private fun LiveEffectPreview(effect: ScreensaverEffect, marqueeText: String) {
             )
             .padding(24.dp),
     ) {
-        key(effect, marqueeText) {
+        RuntimeSettings.speed = settings.speed
+        key(settings.effect, marqueeText, threeDText) {
             AndroidView(
                 modifier = Modifier.matchParentSize(),
                 factory = { context ->
                     GLSurfaceView(context).apply {
                         setEGLContextClientVersion(3)
-                        setRenderer(createPreviewRenderer(context, effect, marqueeText))
+                        setRenderer(createPreviewRenderer(context, settings.effect, marqueeText, threeDText))
                         renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
                     }
                 },
             )
+        }
+        PreviewSettingsOverlay(settings)
+    }
+}
+
+@Composable
+private fun BoxScope.PreviewSettingsOverlay(settings: ScreensaverSettings) {
+    if (settings.brightness < 0.99f) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .background(Color.Black.copy(alpha = (1f - settings.brightness) * 0.72f)),
+        )
+    }
+    if (settings.showClock) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.BottomStart)
+                .padding(start = 18.dp, bottom = 16.dp),
+        ) {
+            Text(
+                text = PREVIEW_TIME_FORMAT.format(Date()),
+                color = Color.White,
+                fontSize = 34.sp,
+                fontWeight = FontWeight.Light,
+                style = MaterialTheme.typography.displaySmall,
+            )
+            Text(
+                text = PREVIEW_DATE_FORMAT.format(Date()),
+                color = Color.White.copy(alpha = 0.92f),
+                fontSize = 12.sp,
+                style = MaterialTheme.typography.bodySmall,
+            )
+        }
+    }
+    if (settings.showWeather) {
+        Column(
+            modifier = Modifier
+                .align(Alignment.TopEnd)
+                .padding(top = 14.dp, end = 16.dp),
+            horizontalAlignment = Alignment.End,
+        ) {
+            Text(
+                text = "22\u00B0  Clear",
+                color = Color.White,
+                fontSize = 15.sp,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text("Sat  24\u00B0/17\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
+            Text("Sun  25\u00B0/18\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
+            Text("Mon  23\u00B0/16\u00B0", color = Color.White.copy(alpha = 0.86f), fontSize = 10.sp)
         }
     }
 }
@@ -205,6 +345,7 @@ private fun createPreviewRenderer(
     context: android.content.Context,
     effect: ScreensaverEffect,
     marqueeText: String,
+    threeDText: String,
 ): GLSurfaceView.Renderer =
     when (effect) {
         ScreensaverEffect.Beziers -> BeziersRenderer()
@@ -216,10 +357,31 @@ private fun createPreviewRenderer(
         )
         ScreensaverEffect.Maze -> MazeRenderer()
         ScreensaverEffect.Mystify -> MystifyRenderer()
+        ScreensaverEffect.Photos -> PhotosRenderer(context)
         ScreensaverEffect.Ribbons -> RibbonsRenderer()
         ScreensaverEffect.Starfield -> StarfieldRenderer()
+        ScreensaverEffect.ThreeDText -> ThreeDTextRenderer(
+            context = context,
+            previewText = threeDText.ifBlank { SettingsStorage.DEFAULT_THREE_D_TEXT },
+        )
+        ScreensaverEffect.WindowsEnergy -> WindowsEnergyRenderer()
         else -> PipesRenderer()
     }
+
+private val PREVIEW_TIME_FORMAT = SimpleDateFormat("HH:mm", Locale.US)
+private val PREVIEW_DATE_FORMAT = SimpleDateFormat("EEEE, MMMM d", Locale.US)
+
+private fun nextSpeed(current: Float): Float {
+    val values = listOf(0.5f, 0.75f, 1f, 1.25f, 1.5f)
+    val index = values.indexOfFirst { kotlin.math.abs(it - current) < 0.01f }
+    return values[(if (index == -1) 2 else index + 1) % values.size]
+}
+
+private fun nextBrightness(current: Float): Float {
+    val values = listOf(0.5f, 0.65f, 0.8f, 1f)
+    val index = values.indexOfFirst { kotlin.math.abs(it - current) < 0.01f }
+    return values[(if (index == -1) 3 else index + 1) % values.size]
+}
 
 @Composable
 private fun PreviewPipe(color: Color, modifier: Modifier) {
@@ -280,7 +442,7 @@ private fun PreviewStar(color: Color, size: androidx.compose.ui.unit.Dp, modifie
 private fun SettingsSummary(settings: ScreensaverSettings) {
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text("Selected: ${settings.effect.title}", color = Color.White, fontWeight = FontWeight.SemiBold)
-        Text("Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Windows, Marquee, Bubbles, and Ribbons.", color = Color(0xFF9AA6BF))
+        Text("Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Windows, Marquee, Bubbles, 3D Text, Windows Energy, Ribbons, and Photos.", color = Color(0xFF9AA6BF))
     }
 }
 
@@ -367,7 +529,10 @@ private fun OptionCard(
 }
 
 @Composable
-private fun MarqueeTextDialog(
+private fun TextInputDialog(
+    title: String,
+    defaultText: String,
+    maxLength: Int,
     value: TextFieldValue,
     onValueChange: (TextFieldValue) -> Unit,
     onDismiss: () -> Unit,
@@ -381,7 +546,7 @@ private fun MarqueeTextDialog(
                 .padding(22.dp),
             verticalArrangement = Arrangement.spacedBy(14.dp),
         ) {
-            Text("Marquee text", color = Color.White, fontWeight = FontWeight.SemiBold)
+            Text(title, color = Color.White, fontWeight = FontWeight.SemiBold)
             BasicTextField(
                 value = value,
                 onValueChange = onValueChange,
@@ -394,13 +559,13 @@ private fun MarqueeTextDialog(
                     .padding(horizontal = 14.dp, vertical = 12.dp),
                 decorationBox = { innerTextField ->
                     if (value.text.isEmpty()) {
-                        Text(SettingsStorage.DEFAULT_MARQUEE_TEXT, color = Color(0xFF687284))
+                        Text(defaultText, color = Color(0xFF687284))
                     }
                     innerTextField()
                 },
             )
             Text(
-                "${value.text.length}/${SettingsStorage.MAX_MARQUEE_TEXT_LENGTH}",
+                "${value.text.length}/$maxLength",
                 color = Color(0xFF9AA6BF),
                 style = MaterialTheme.typography.bodySmall,
             )

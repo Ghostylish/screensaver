@@ -5,6 +5,7 @@ import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
+import com.example.screensaverwindows.settings.RuntimeSettings
 import android.opengl.GLUtils
 import android.opengl.Matrix
 import androidx.core.content.ContextCompat
@@ -65,11 +66,11 @@ class FlyingWindowsRenderer(private val context: Context) : GLSurfaceView.Render
 
     override fun onDrawFrame(gl: GL10?) {
         val now = System.nanoTime()
-        val deltaSeconds = if (lastFrameNanos == 0L) {
+        val deltaSeconds = (if (lastFrameNanos == 0L) {
             1f / 60f
         } else {
             ((now - lastFrameNanos) / 1_000_000_000f).coerceAtMost(0.04f)
-        }
+        }) * RuntimeSettings.speed
         lastFrameNanos = now
 
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT or GLES30.GL_DEPTH_BUFFER_BIT)

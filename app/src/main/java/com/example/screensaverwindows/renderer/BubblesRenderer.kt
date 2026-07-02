@@ -2,6 +2,7 @@ package com.example.screensaverwindows.renderer
 
 import android.opengl.GLES30
 import android.opengl.GLSurfaceView
+import com.example.screensaverwindows.settings.RuntimeSettings
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
 import java.nio.FloatBuffer
@@ -60,17 +61,17 @@ class BubblesRenderer : GLSurfaceView.Renderer {
 
     override fun onDrawFrame(gl: GL10?) {
         val now = System.nanoTime()
-        val deltaSeconds = if (lastFrameNanos == 0L) {
+        val deltaSeconds = (if (lastFrameNanos == 0L) {
             1f / 60f
         } else {
             min(0.04f, (now - lastFrameNanos) / 1_000_000_000f)
-        }
+        }) * RuntimeSettings.speed
         lastFrameNanos = now
 
         GLES30.glClear(GLES30.GL_COLOR_BUFFER_BIT)
         drawBackground()
 
-        val elapsed = (now - startNanos) / 1_000_000_000f
+        val elapsed = (now - startNanos) / 1_000_000_000f * RuntimeSettings.speed
         bubbles.forEach { bubble ->
             updateBubble(bubble, deltaSeconds, elapsed)
         }
