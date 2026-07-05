@@ -60,7 +60,6 @@ import com.example.screensaverwindows.renderer.MazeRenderer
 import com.example.screensaverwindows.renderer.MystifyRenderer
 import com.example.screensaverwindows.renderer.PhotosRenderer
 import com.example.screensaverwindows.renderer.PipesRenderer
-import com.example.screensaverwindows.renderer.RibbonsRenderer
 import com.example.screensaverwindows.renderer.StarfieldRenderer
 import com.example.screensaverwindows.renderer.ThreeDTextRenderer
 import com.example.screensaverwindows.renderer.WindowsEnergyRenderer
@@ -193,7 +192,6 @@ fun SettingsScreen() {
                             effect == ScreensaverEffect.Bubbles ||
                             effect == ScreensaverEffect.ThreeDText ||
                             effect == ScreensaverEffect.WindowsEnergy ||
-                            effect == ScreensaverEffect.Ribbons ||
                             effect == ScreensaverEffect.Photos
                         OptionCard(
                             title = stringResource(effect.titleResId()),
@@ -547,7 +545,6 @@ private fun createPreviewRenderer(
         ScreensaverEffect.Maze -> MazeRenderer()
         ScreensaverEffect.Mystify -> MystifyRenderer()
         ScreensaverEffect.Photos -> PhotosRenderer(context)
-        ScreensaverEffect.Ribbons -> RibbonsRenderer()
         ScreensaverEffect.Starfield -> StarfieldRenderer()
         ScreensaverEffect.ThreeDText -> ThreeDTextRenderer(
             context = context,
@@ -569,7 +566,6 @@ private fun ScreensaverEffect.titleResId(): Int =
         ScreensaverEffect.Bubbles -> R.string.effect_bubbles
         ScreensaverEffect.ThreeDText -> R.string.effect_three_d_text
         ScreensaverEffect.WindowsEnergy -> R.string.effect_windows_energy
-        ScreensaverEffect.Ribbons -> R.string.effect_ribbons
         ScreensaverEffect.Photos -> R.string.effect_photos
     }
 
@@ -585,7 +581,6 @@ private fun ScreensaverEffect.familyResId(): Int =
         ScreensaverEffect.Bubbles,
         ScreensaverEffect.ThreeDText,
         ScreensaverEffect.WindowsEnergy -> R.string.family_windows_vista
-        ScreensaverEffect.Ribbons -> R.string.family_windows_7
         ScreensaverEffect.Photos -> R.string.family_windows_10_11
     }
 

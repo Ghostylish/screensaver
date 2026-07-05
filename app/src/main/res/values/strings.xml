@@ -28,7 +28,7 @@
     <string name="google_tv_blocked_note">Some Google TV devices may block third-party screensaver selection.</string>
     <string name="google_tv_fullscreen_note">If you cannot select Windows Through Time in device settings, use Start fullscreen screensaver.</string>
     <string name="summary_selected">Selected: %1$s</string>
-    <string name="summary_available">Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Windows, Marquee, Bubbles, 3D Text, Windows Energy, Ribbons, and Photos.</string>
+    <string name="summary_available">Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Windows, Marquee, Bubbles, 3D Text, Windows Energy, and Photos.</string>
 
     <string name="weather_lookup_default_ip">Default from IP will be used: %1$s</string>
     <string name="weather_lookup_found">Found: %1$s</string>
@@ -46,11 +46,9 @@
     <string name="effect_bubbles">Bubbles</string>
     <string name="effect_three_d_text">3D Text</string>
     <string name="effect_windows_energy">Windows Energy</string>
-    <string name="effect_ribbons">Ribbons</string>
     <string name="effect_photos">Photos</string>
     <string name="family_windows_xp">Windows XP classics</string>
     <string name="family_windows_vista">Windows Vista</string>
-    <string name="family_windows_7">Windows 7</string>
     <string name="family_windows_10_11">Windows 10 / 11 inspired</string>
 
     <string name="weather_label">Weather</string>
