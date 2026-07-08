@@ -7,7 +7,8 @@ class SettingsStorage(context: Context) {
 
     fun getEffect(): ScreensaverEffect {
         val storedName = preferences.getString(KEY_EFFECT, ScreensaverEffect.Pipes.name)
-        return ScreensaverEffect.entries.firstOrNull { it.name == storedName } ?: ScreensaverEffect.Pipes
+        val effect = ScreensaverEffect.entries.firstOrNull { it.name == storedName } ?: ScreensaverEffect.Pipes
+        return if (effect in DISABLED_EFFECTS) ScreensaverEffect.Pipes else effect
     }
 
     fun setEffect(effect: ScreensaverEffect) {
@@ -91,6 +92,8 @@ class SettingsStorage(context: Context) {
     }
 
     companion object {
+        private val DISABLED_EFFECTS = setOf(ScreensaverEffect.Photos)
+
         const val DEFAULT_MARQUEE_TEXT = "[Windows NT 3.1]"
         const val MAX_MARQUEE_TEXT_LENGTH = 80
         const val DEFAULT_THREE_D_TEXT = "Windows Vista"

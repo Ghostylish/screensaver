@@ -4,12 +4,17 @@ plugins {
     alias(libs.plugins.kotlin.compose)
 }
 
+// Firebase configuration is enabled after app/google-services.json is added.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+}
+
 android {
     namespace = "com.example.screensaverwindows"
     compileSdk = 36
 
     defaultConfig {
-        applicationId = "com.example.screensaverwindows"
+        applicationId = "com.retroscreensaver.collection"
         minSdk = 28
         targetSdk = 36
         versionCode = 1
@@ -51,6 +56,8 @@ dependencies {
     implementation(libs.androidx.tv.material)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.analytics)
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)

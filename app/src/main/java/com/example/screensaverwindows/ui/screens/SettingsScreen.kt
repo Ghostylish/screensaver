@@ -52,13 +52,13 @@ import androidx.tv.material3.Surface
 import androidx.tv.material3.Text
 import com.example.screensaverwindows.FullscreenScreensaverActivity
 import com.example.screensaverwindows.R
+import com.example.screensaverwindows.analytics.AnalyticsLogger
 import com.example.screensaverwindows.renderer.BeziersRenderer
 import com.example.screensaverwindows.renderer.BubblesRenderer
 import com.example.screensaverwindows.renderer.FlyingWindowsRenderer
 import com.example.screensaverwindows.renderer.MarqueeRenderer
 import com.example.screensaverwindows.renderer.MazeRenderer
 import com.example.screensaverwindows.renderer.MystifyRenderer
-import com.example.screensaverwindows.renderer.PhotosRenderer
 import com.example.screensaverwindows.renderer.PipesRenderer
 import com.example.screensaverwindows.renderer.StarfieldRenderer
 import com.example.screensaverwindows.renderer.ThreeDTextRenderer
@@ -155,10 +155,13 @@ fun SettingsScreen() {
                 verticalArrangement = Arrangement.spacedBy(18.dp),
             ) {
                 Text(
-                    text = "Windows Through Time",
+                    text = stringResource(R.string.app_name),
                     color = Color.White,
-                    style = MaterialTheme.typography.displaySmall,
+                    fontSize = 28.sp,
+                    lineHeight = 32.sp,
                     fontWeight = FontWeight.Bold,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
                 )
                 Text(
                     text = stringResource(R.string.app_description),
@@ -191,8 +194,7 @@ fun SettingsScreen() {
                             effect == ScreensaverEffect.Marquee ||
                             effect == ScreensaverEffect.Bubbles ||
                             effect == ScreensaverEffect.ThreeDText ||
-                            effect == ScreensaverEffect.WindowsEnergy ||
-                            effect == ScreensaverEffect.Photos
+                            effect == ScreensaverEffect.WindowsEnergy
                         OptionCard(
                             title = stringResource(effect.titleResId()),
                             subtitle = when {
@@ -205,6 +207,7 @@ fun SettingsScreen() {
                             onClick = {
                                 storage.setEffect(effect)
                                 settings = settings.copy(effect = effect)
+                                AnalyticsLogger.screensaverSelected(context, effect)
                                 if (effect == ScreensaverEffect.Marquee) {
                                     marqueeText = TextFieldValue(storage.getMarqueeText())
                                     showMarqueeDialog = true
@@ -231,6 +234,7 @@ fun SettingsScreen() {
                             storage.setSpeed(next)
                             RuntimeSettings.speed = next
                             settings = settings.copy(speed = next)
+                            AnalyticsLogger.speedChanged(context, next)
                         },
                     )
                 }
@@ -243,6 +247,7 @@ fun SettingsScreen() {
                             val next = nextBrightness(settings.brightness)
                             storage.setBrightness(next)
                             settings = settings.copy(brightness = next)
+                            AnalyticsLogger.brightnessChanged(context, next)
                         },
                     )
                 }
@@ -255,6 +260,7 @@ fun SettingsScreen() {
                             val next = !settings.showClock
                             storage.setShowClock(next)
                             settings = settings.copy(showClock = next)
+                            AnalyticsLogger.clockToggled(context, next)
                         },
                     )
                 }
@@ -267,6 +273,7 @@ fun SettingsScreen() {
                             val next = !settings.showWeather
                             storage.setShowWeather(next)
                             settings = settings.copy(showWeather = next)
+                            AnalyticsLogger.weatherToggled(context, next)
                         },
                     )
                 }
@@ -287,6 +294,7 @@ fun SettingsScreen() {
                         subtitle = stringResource(R.string.setting_start_fullscreen_subtitle),
                         selected = false,
                         onClick = {
+                            AnalyticsLogger.screensaverLaunchClicked(context, settings.effect)
                             context.startActivity(Intent(context, FullscreenScreensaverActivity::class.java))
                         },
                     )
@@ -313,8 +321,10 @@ fun SettingsScreen() {
             },
             onDismiss = {
                 val finalText = marqueeText.text.ifBlank { SettingsStorage.DEFAULT_MARQUEE_TEXT }
+                val usedDefault = marqueeText.text.isBlank()
                 marqueeText = TextFieldValue(finalText)
                 storage.setMarqueeText(finalText)
+                AnalyticsLogger.marqueeTextSaved(context, finalText.length, usedDefault)
                 showMarqueeDialog = false
             },
         )
@@ -335,8 +345,10 @@ fun SettingsScreen() {
             },
             onDismiss = {
                 val finalText = threeDText.text.ifBlank { SettingsStorage.DEFAULT_THREE_D_TEXT }
+                val usedDefault = threeDText.text.isBlank()
                 threeDText = TextFieldValue(finalText)
                 storage.setThreeDText(finalText)
+                AnalyticsLogger.threeDTextSaved(context, finalText.length, usedDefault)
                 showThreeDTextDialog = false
             },
         )
@@ -355,6 +367,7 @@ fun SettingsScreen() {
                     latitude = location.latitude,
                     longitude = location.longitude,
                 )
+                AnalyticsLogger.weatherCityChanged(context)
                 showWeatherCityDialog = false
             },
             onDismiss = {
@@ -544,7 +557,6 @@ private fun createPreviewRenderer(
         )
         ScreensaverEffect.Maze -> MazeRenderer()
         ScreensaverEffect.Mystify -> MystifyRenderer()
-        ScreensaverEffect.Photos -> PhotosRenderer(context)
         ScreensaverEffect.Starfield -> StarfieldRenderer()
         ScreensaverEffect.ThreeDText -> ThreeDTextRenderer(
             context = context,
@@ -846,7 +858,7 @@ private suspend fun searchIpWeatherLocation(context: android.content.Context): W
             requestMethod = "GET"
             connectTimeout = 7_000
             readTimeout = 7_000
-            setRequestProperty("User-Agent", "WindowsThroughTime-AndroidTV")
+            setRequestProperty("User-Agent", "RetroScreensaverCollection-AndroidTV")
         }
         val text = connection.inputStream.bufferedReader().use(BufferedReader::readText)
         val json = JSONObject(text)

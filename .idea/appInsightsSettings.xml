@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.retroscreensaver.collection" />
+                  <option name="mobileSdkAppId" value="1:846109734417:android:121e642e103dd9162963b0" />
+                  <option name="projectId" value="retro-screensaver-collection" />
+                  <option name="projectNumber" value="846109734417" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />

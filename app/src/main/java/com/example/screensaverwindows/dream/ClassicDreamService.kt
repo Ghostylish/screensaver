@@ -2,6 +2,8 @@ package com.example.screensaverwindows.dream
 
 import android.opengl.GLSurfaceView
 import android.service.dreams.DreamService
+import com.example.screensaverwindows.analytics.AnalyticsLogger
+import com.example.screensaverwindows.settings.SettingsStorage
 
 class ClassicDreamService : DreamService() {
     private var glSurfaceView: GLSurfaceView? = null
@@ -13,6 +15,7 @@ class ClassicDreamService : DreamService() {
         isScreenBright = true
 
         val (content, surfaceView) = createScreensaverContent(this)
+        AnalyticsLogger.screensaverStarted(this, SettingsStorage(this).getEffect(), "dream_service")
         glSurfaceView = surfaceView
         setContentView(content)
     }

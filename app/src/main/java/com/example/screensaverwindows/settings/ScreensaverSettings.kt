@@ -10,7 +10,7 @@ enum class ScreensaverEffect(val title: String, val windowsFamily: String) {
     Marquee("Marquee", "Windows XP classics"),
     Bubbles("Bubbles", "Windows Vista"),
     ThreeDText("3D Text", "Windows Vista"),
-    WindowsEnergy("Windows Energy", "Windows Vista"),
+    WindowsEnergy("Energy Waves", "Aero Era"),
     Photos("Photos", "Windows 10 / 11 inspired"),
 }
 
