@@ -62,7 +62,6 @@ import com.example.screensaverwindows.renderer.MystifyRenderer
 import com.example.screensaverwindows.renderer.PipesRenderer
 import com.example.screensaverwindows.renderer.StarfieldRenderer
 import com.example.screensaverwindows.renderer.ThreeDTextRenderer
-import com.example.screensaverwindows.renderer.WindowsEnergyRenderer
 import com.example.screensaverwindows.settings.RuntimeSettings
 import com.example.screensaverwindows.settings.ScreensaverEffect
 import com.example.screensaverwindows.settings.ScreensaverSettings
@@ -118,6 +117,7 @@ fun SettingsScreen() {
                 longitude = storage.getWeatherLongitude(),
                 fallbackCity = storage.getWeatherCity(),
                 fallbackCountry = storage.getWeatherCountry(),
+                fallbackCountryCode = storage.getWeatherCountryCode(),
                 )
             }
             storage.setWeatherLocation(
@@ -125,6 +125,7 @@ fun SettingsScreen() {
                 country = location.country,
                 latitude = location.latitude,
                 longitude = location.longitude,
+                countryCode = location.countryCode,
             )
             weatherCity = TextFieldValue(location.city)
             weatherCityTitle = location.displayName
@@ -135,6 +136,7 @@ fun SettingsScreen() {
                     country = location.country,
                     latitude = location.latitude,
                     longitude = location.longitude,
+                    countryCode = location.countryCode,
                 )
                 weatherCity = TextFieldValue(location.city)
                 weatherCityTitle = location.displayName
@@ -193,8 +195,7 @@ fun SettingsScreen() {
                             effect == ScreensaverEffect.FlyingWindows ||
                             effect == ScreensaverEffect.Marquee ||
                             effect == ScreensaverEffect.Bubbles ||
-                            effect == ScreensaverEffect.ThreeDText ||
-                            effect == ScreensaverEffect.WindowsEnergy
+                            effect == ScreensaverEffect.ThreeDText
                         OptionCard(
                             title = stringResource(effect.titleResId()),
                             subtitle = when {
@@ -366,6 +367,7 @@ fun SettingsScreen() {
                     country = location.country,
                     latitude = location.latitude,
                     longitude = location.longitude,
+                    countryCode = location.countryCode,
                 )
                 AnalyticsLogger.weatherCityChanged(context)
                 showWeatherCityDialog = false
@@ -460,7 +462,7 @@ private fun BoxScope.PreviewSettingsOverlay(settings: ScreensaverSettings, weath
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 PreviewWeatherIcon()
                 Text(
-                    text = "22\u00B0  ${stringResource(R.string.weather_clear)}",
+                    text = "${formatPreviewTemperature(22, context)}  ${stringResource(R.string.weather_clear)}",
                     color = Color.White,
                     fontSize = 15.sp,
                     fontWeight = FontWeight.SemiBold,
@@ -562,7 +564,6 @@ private fun createPreviewRenderer(
             context = context,
             previewText = threeDText.ifBlank { SettingsStorage.DEFAULT_THREE_D_TEXT },
         )
-        ScreensaverEffect.WindowsEnergy -> WindowsEnergyRenderer()
         else -> PipesRenderer()
     }
 
@@ -577,8 +578,6 @@ private fun ScreensaverEffect.titleResId(): Int =
         ScreensaverEffect.Marquee -> R.string.effect_marquee
         ScreensaverEffect.Bubbles -> R.string.effect_bubbles
         ScreensaverEffect.ThreeDText -> R.string.effect_three_d_text
-        ScreensaverEffect.WindowsEnergy -> R.string.effect_windows_energy
-        ScreensaverEffect.Photos -> R.string.effect_photos
     }
 
 private fun ScreensaverEffect.familyResId(): Int =
@@ -591,9 +590,7 @@ private fun ScreensaverEffect.familyResId(): Int =
         ScreensaverEffect.FlyingWindows,
         ScreensaverEffect.Marquee -> R.string.family_windows_xp
         ScreensaverEffect.Bubbles,
-        ScreensaverEffect.ThreeDText,
-        ScreensaverEffect.WindowsEnergy -> R.string.family_windows_vista
-        ScreensaverEffect.Photos -> R.string.family_windows_10_11
+        ScreensaverEffect.ThreeDText -> R.string.family_windows_vista
     }
 
 @Composable
@@ -748,13 +745,23 @@ private fun previewForecastRows(context: android.content.Context): List<PreviewF
     val dayFormat = SimpleDateFormat("EEE", supportedAppLocale(context))
     val calendar = java.util.Calendar.getInstance()
     return listOf(
-        PreviewWeatherIconType.Partly to "24\u00B0/17\u00B0",
-        PreviewWeatherIconType.Clear to "25\u00B0/18\u00B0",
-        PreviewWeatherIconType.Rain to "23\u00B0/16\u00B0",
-    ).map { (icon, temp) ->
+        PreviewWeatherIconType.Partly to (24 to 17),
+        PreviewWeatherIconType.Clear to (25 to 18),
+        PreviewWeatherIconType.Rain to (23 to 16),
+    ).map { (icon, temps) ->
         calendar.add(java.util.Calendar.DAY_OF_YEAR, 1)
-        PreviewForecastSample("${dayFormat.format(calendar.time)}  $temp", icon)
+        PreviewForecastSample(
+            "${dayFormat.format(calendar.time)}  ${formatPreviewTemperature(temps.first, context)}/${formatPreviewTemperature(temps.second, context)}",
+            icon,
+        )
     }
+}
+
+private fun formatPreviewTemperature(celsius: Int, context: android.content.Context): String {
+    val storage = SettingsStorage(context)
+    val unit = temperatureUnitFor(storage.getWeatherCountryCode(), storage.getWeatherCountry())
+    val value = if (unit == TemperatureUnit.Fahrenheit) (celsius * 9f / 5f + 32f).toInt() else celsius
+    return "$value${unit.displaySuffix}"
 }
 
 private fun supportedAppLocale(context: android.content.Context): Locale {
@@ -800,6 +807,7 @@ private fun searchWeatherCityByQuery(
     return WeatherLocationSuggestion(
         city = result.optString("name", SettingsStorage.DEFAULT_WEATHER_CITY),
         country = result.optString("country", SettingsStorage.DEFAULT_WEATHER_COUNTRY),
+        countryCode = result.optString("country_code", SettingsStorage.DEFAULT_WEATHER_COUNTRY_CODE).uppercase(),
         latitude = result.getDouble("latitude").toFloat(),
         longitude = result.getDouble("longitude").toFloat(),
     )
@@ -870,6 +878,7 @@ private suspend fun searchIpWeatherLocation(context: android.content.Context): W
             longitude = longitude,
             fallbackCity = json.optString("city").takeIf { it.isNotBlank() } ?: SettingsStorage.DEFAULT_WEATHER_CITY,
             fallbackCountry = json.optString("country_name").takeIf { it.isNotBlank() } ?: SettingsStorage.DEFAULT_WEATHER_COUNTRY,
+            fallbackCountryCode = json.optString("country_code").takeIf { it.isNotBlank() } ?: SettingsStorage.DEFAULT_WEATHER_COUNTRY_CODE,
         )
     }
 
@@ -879,9 +888,10 @@ private fun localizedLocationFromCoordinates(
     longitude: Float,
     fallbackCity: String,
     fallbackCountry: String,
+    fallbackCountryCode: String,
 ): WeatherLocationSuggestion {
     runCatching {
-        searchWeatherCityNear(context, fallbackCity, fallbackCountry, latitude, longitude)
+        searchWeatherCityNear(context, fallbackCity, fallbackCountry, fallbackCountryCode, latitude, longitude)
     }.getOrNull()?.let { return it }
 
     val address = runCatching {
@@ -893,6 +903,7 @@ private fun localizedLocationFromCoordinates(
             ?: address?.subAdminArea?.takeIf { it.isNotBlank() }
             ?: fallbackCity,
         country = address?.countryName?.takeIf { it.isNotBlank() } ?: fallbackCountry,
+        countryCode = address?.countryCode?.takeIf { it.isNotBlank() }?.uppercase() ?: fallbackCountryCode,
         latitude = latitude,
         longitude = longitude,
     )
@@ -902,6 +913,7 @@ private fun searchWeatherCityNear(
     context: android.content.Context,
     city: String,
     fallbackCountry: String,
+    fallbackCountryCode: String,
     latitude: Float,
     longitude: Float,
 ): WeatherLocationSuggestion? {
@@ -927,6 +939,7 @@ private fun searchWeatherCityNear(
     return WeatherLocationSuggestion(
         city = nearest.optString("name", city),
         country = nearest.optString("country", fallbackCountry),
+        countryCode = nearest.optString("country_code", fallbackCountryCode).uppercase(),
         latitude = latitude,
         longitude = longitude,
     )
@@ -936,6 +949,7 @@ private fun londonFallbackLocation(): WeatherLocationSuggestion =
     WeatherLocationSuggestion(
         city = SettingsStorage.DEFAULT_WEATHER_CITY,
         country = SettingsStorage.DEFAULT_WEATHER_COUNTRY,
+        countryCode = SettingsStorage.DEFAULT_WEATHER_COUNTRY_CODE,
         latitude = DEFAULT_WEATHER_LATITUDE,
         longitude = DEFAULT_WEATHER_LONGITUDE,
     )
@@ -951,11 +965,37 @@ private sealed interface WeatherCityLookupState {
 private data class WeatherLocationSuggestion(
     val city: String,
     val country: String,
+    val countryCode: String,
     val latitude: Float,
     val longitude: Float,
 ) {
     val displayName: String = if (country.isBlank()) city else "$city, $country"
 }
+
+private enum class TemperatureUnit(val displaySuffix: String) {
+    Celsius("\u00B0C"),
+    Fahrenheit("\u00B0F"),
+}
+
+private fun temperatureUnitFor(countryCode: String, country: String): TemperatureUnit {
+    val normalizedCode = countryCode.trim().uppercase(Locale.US)
+    val normalizedCountry = country.trim().lowercase(Locale.US)
+    return if (normalizedCode in FAHRENHEIT_COUNTRY_CODES || normalizedCountry in FAHRENHEIT_COUNTRY_NAMES) {
+        TemperatureUnit.Fahrenheit
+    } else {
+        TemperatureUnit.Celsius
+    }
+}
+
+private val FAHRENHEIT_COUNTRY_CODES = setOf("US", "AS", "BS", "BZ", "GU", "KY", "MP", "PR", "PW", "UM", "VI")
+private val FAHRENHEIT_COUNTRY_NAMES = setOf(
+    "united states",
+    "united states of america",
+    "bahamas",
+    "belize",
+    "cayman islands",
+    "palau",
+)
 
 private data class PreviewForecastSample(
     val text: String,

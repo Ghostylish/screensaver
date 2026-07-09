@@ -7,8 +7,7 @@ class SettingsStorage(context: Context) {
 
     fun getEffect(): ScreensaverEffect {
         val storedName = preferences.getString(KEY_EFFECT, ScreensaverEffect.Pipes.name)
-        val effect = ScreensaverEffect.entries.firstOrNull { it.name == storedName } ?: ScreensaverEffect.Pipes
-        return if (effect in DISABLED_EFFECTS) ScreensaverEffect.Pipes else effect
+        return ScreensaverEffect.entries.firstOrNull { it.name == storedName } ?: ScreensaverEffect.Pipes
     }
 
     fun setEffect(effect: ScreensaverEffect) {
@@ -53,13 +52,18 @@ class SettingsStorage(context: Context) {
         preferences.getString(KEY_WEATHER_COUNTRY, DEFAULT_WEATHER_COUNTRY)?.takeIf { it.isNotBlank() }
             ?: DEFAULT_WEATHER_COUNTRY
 
+    fun getWeatherCountryCode(): String =
+        preferences.getString(KEY_WEATHER_COUNTRY_CODE, DEFAULT_WEATHER_COUNTRY_CODE)?.takeIf { it.isNotBlank() }
+            ?: DEFAULT_WEATHER_COUNTRY_CODE
+
     fun hasResolvedWeatherLocation(): Boolean =
         preferences.getBoolean(KEY_WEATHER_LOCATION_RESOLVED, false)
 
-    fun setWeatherLocation(city: String, country: String, latitude: Float, longitude: Float) {
+    fun setWeatherLocation(city: String, country: String, latitude: Float, longitude: Float, countryCode: String = "") {
         preferences.edit()
             .putString(KEY_WEATHER_CITY, city.trim().ifBlank { DEFAULT_WEATHER_CITY }.take(MAX_WEATHER_CITY_LENGTH))
             .putString(KEY_WEATHER_COUNTRY, country.trim().ifBlank { DEFAULT_WEATHER_COUNTRY }.take(MAX_WEATHER_CITY_LENGTH))
+            .putString(KEY_WEATHER_COUNTRY_CODE, countryCode.trim().uppercase().take(3))
             .putFloat(KEY_WEATHER_LATITUDE, latitude)
             .putFloat(KEY_WEATHER_LONGITUDE, longitude)
             .putBoolean(KEY_WEATHER_LOCATION_RESOLVED, true)
@@ -92,14 +96,13 @@ class SettingsStorage(context: Context) {
     }
 
     companion object {
-        private val DISABLED_EFFECTS = setOf(ScreensaverEffect.Photos)
-
         const val DEFAULT_MARQUEE_TEXT = "[Windows NT 3.1]"
         const val MAX_MARQUEE_TEXT_LENGTH = 80
         const val DEFAULT_THREE_D_TEXT = "Windows Vista"
         const val MAX_THREE_D_TEXT_LENGTH = 24
         const val DEFAULT_WEATHER_CITY = "London"
         const val DEFAULT_WEATHER_COUNTRY = "United Kingdom"
+        const val DEFAULT_WEATHER_COUNTRY_CODE = "GB"
         const val MAX_WEATHER_CITY_LENGTH = 60
 
         private const val PREFERENCES_NAME = "classic_screensaver_settings"
@@ -112,6 +115,7 @@ class SettingsStorage(context: Context) {
         private const val KEY_SHOW_WEATHER = "show_weather"
         private const val KEY_WEATHER_CITY = "weather_city"
         private const val KEY_WEATHER_COUNTRY = "weather_country"
+        private const val KEY_WEATHER_COUNTRY_CODE = "weather_country_code"
         private const val KEY_WEATHER_LATITUDE = "weather_latitude"
         private const val KEY_WEATHER_LONGITUDE = "weather_longitude"
         private const val KEY_WEATHER_LOCATION_RESOLVED = "weather_location_resolved"

@@ -28,7 +28,7 @@
     <string name="google_tv_blocked_note">Some Google TV devices may block third-party screensaver selection.</string>
     <string name="google_tv_fullscreen_note">If you cannot select Retro Screensaver Collection in device settings, use Start fullscreen screensaver.</string>
     <string name="summary_selected">Selected: %1$s</string>
-    <string name="summary_available">Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Logos, Marquee, Bubbles, 3D Text, and Energy Waves.</string>
+    <string name="summary_available">Available now: 3D Pipes, Mystify, Beziers, 3D Maze, Starfield, Flying Logos, Marquee, Bubbles, and 3D Text.</string>
 
     <string name="weather_lookup_default_ip">Default from IP will be used: %1$s</string>
     <string name="weather_lookup_found">Found: %1$s</string>
@@ -45,7 +45,6 @@
     <string name="effect_marquee">Marquee</string>
     <string name="effect_bubbles">Bubbles</string>
     <string name="effect_three_d_text">3D Text</string>
-    <string name="effect_windows_energy">Energy Waves</string>
     <string name="effect_photos">Photos</string>
     <string name="family_windows_xp">Classic PC Era</string>
     <string name="family_windows_vista">Aero Era</string>

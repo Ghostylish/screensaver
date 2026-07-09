@@ -9,10 +9,16 @@
         android:name="android.software.leanback"
         android:required="true" />
     <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission
+        android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove" />
+    <uses-permission
+        android:name="android.permission.ACCESS_ADSERVICES_AD_ID"
+        tools:node="remove" />
 
     <application
         android:allowBackup="true"
-        android:banner="@mipmap/ic_launcher"
+        android:banner="@mipmap/ic_banner"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:supportsRtl="true"
@@ -33,6 +39,10 @@
             android:exported="false"
             android:screenOrientation="landscape"
             android:theme="@style/Theme.Screensaverwindows" />
+
+        <meta-data
+            android:name="google_analytics_adid_collection_enabled"
+            android:value="false" />
 
         <service
             android:name=".dream.ClassicDreamService"
